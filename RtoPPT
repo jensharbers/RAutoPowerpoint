@@ -1,0 +1,28 @@
+library(ggplot2)
+library(ggpubr)
+library(R2PPT)
+library(stringr)
+
+df <- read.csv("./data.csv", encoding="UTF-8", sep=";")
+df$AktionsID <- stringr::str_squish(df$AktionsID)
+colnames(df)[1] <- "Anzahl"
+df <- df[df$Differenz.in.Tagen<=200,]
+df <- df[df$Differenz.in.Tagen>=0,]
+
+myPres <- PPT.Open(paste(getwd(),"Zentralbereich_ppt","Template_Company.pptx",sep="/"))
+#myPres<-PPT.Init(visible=TRUE)
+myPres<-PPT.AddTitleSlide(myPres,title="Mein Titel der Slides")
+myPres <- PPT.AddBlankSlide(myPres)
+
+for (id in unique(df$AktionsID)){
+myPres <- PPT.AddTextSlide(myPres, title = paste("Darstellung nach AktionsID:", id), title.fontsize = 20, title.font = "Arial")
+plt <- ggline(df[df$AktionsID==id,],"Differenz.in.Tagen","Anzahl",
+       xlab = "Tage nach Bestellung",
+       yab="Anzahl", color = "#00AB00",size=2)+ theme_pubr(base_size = 18, base_family = "sans")
+ggsave(paste("AktionIDdaten",id,".jpeg"), width=12,height=5.5,dev="jpeg")
+myPres<-PPT.AddGraphicstoSlide(myPres,file=paste(getwd(), paste("AktionIDdaten",id,".jpeg"),sep="/"),size= c(50, 80, 620, 390))
+}
+
+PPT.SaveAs(myPres,"RtoPPTBeautiful")
+PPT.Close(myPres)
+ 
